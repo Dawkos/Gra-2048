@@ -110,4 +110,16 @@ public class Main extends JPanel {
             g.drawString("(Używaj strzałek do sterowania)", 310, 530);
         }
     }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame f = new JFrame();
+            f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            f.setTitle("2048");
+            f.setResizable(true);
+            f.add(new Main(), BorderLayout.CENTER);
+            f.pack();
+            f.setLocationRelativeTo(null);
+            f.setVisible(true);
+        });
+    }
 }
