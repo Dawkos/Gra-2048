@@ -1,7 +1,11 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.Random;
 import javax.swing.*;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import org.xml.sax.SAXException;
 
 public class Main extends JPanel {
     enum State {
@@ -24,11 +28,14 @@ public class Main extends JPanel {
     private State gamestate = State.start;
     private boolean checkingAvailableMoves;
 
-    public Main() {
-        setPreferredSize(new Dimension(900, 700));
+    public Main() throws ParserConfigurationException, IOException, SAXException {
+        setPreferredSize(new Dimension(1920, 1080));
         setBackground(new Color(0x625656));
         setFont(new Font("SansSerif", Font.BOLD, 48));
         setFocusable(true);
+        GameScore.setScore(GameScore.getScoreXML());
+
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -63,7 +70,11 @@ public class Main extends JPanel {
         Graphics2D g = (Graphics2D) gg;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
-        drawGrid(g);
+        try {
+            drawGrid(g);
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
     }
     void startGame() {
         if (gamestate != State.running) {
@@ -73,17 +84,18 @@ public class Main extends JPanel {
             tiles = new Tile[side][side];
             addRandomTile();
             addRandomTile();
+            add2048Tile();
         }
     }
-    void drawGrid(Graphics2D g) {
+    void drawGrid(Graphics2D g) throws ParserConfigurationException, IOException, SAXException {
         g.setColor(gridColor);
-        g.fillRoundRect(200, 100, 499, 499, 15, 15);
+        g.fillRoundRect(401, 25, 619, 619, 15, 15);
         if (gamestate == State.running) {
             for (int r = 0; r < side; r++) {
                 for (int c = 0; c < side; c++) {
                     if (tiles[r][c] == null) {
                         g.setColor(emptyColor);
-                        g.fillRoundRect(215 + c * 121, 115 + r * 121, 106, 106, 7, 7);
+                        g.fillRoundRect(415 + c * 121, 40 + r * 121, 106, 106, 7, 7);
                     } else {
                         drawTile(g, r, c);
                     }
@@ -91,31 +103,34 @@ public class Main extends JPanel {
             }
         } else {
             g.setColor(startColor);
-            g.fillRoundRect(215, 115, 469, 469, 7, 7);
+            g.fillRoundRect(470, 115, 469, 469, 7, 7);
             g.setColor(gridColor.darker());
             g.setFont(new Font("SansSerif", Font.BOLD, 128));
-            g.drawString("2048", 310, 270);
+            g.drawString("2048", 570, 270);
             g.setFont(new Font("SansSerif", Font.BOLD, 20));
             if (gamestate == State.won) {
-                g.drawString("Wygrałeś!", 390, 350);
+                g.drawString("Wygrałeś!", 590, 350);
             } else if (gamestate == State.over)
-                g.drawString("Przegrałeś", 400, 350);
+                g.drawString("Przegrałeś", 590, 350);
             g.setColor(gridColor);
-            g.drawString("Kliknij aby zagrać", 330, 470);
-            g.drawString("(używaj strzałek do sterowania)", 310, 530);
+            g.drawString("Kliknij aby zagrać", 570, 470);
+            g.drawString("(używaj strzałek do sterowania)", 570, 530);
         }
+        g.setFont(new Font("SansSerif", Font.BOLD, 25));
+        g.drawString("Wynik: " + score, 175, 165);
+        g.drawString("Najwyższy wynik: " + String.valueOf(GameScore.getScoreXML().getScore()), 105, 480);
     }
     void drawTile(Graphics2D g, int r, int c) {
         int value = tiles[r][c].getValue();
         g.setColor(colorTable[(int) (Math.log(value) / Math.log(2)) + 1]);
-        g.fillRoundRect(215 + c * 121, 115 + r * 121, 106, 106, 7, 7);
+        g.fillRoundRect(415 + c * 121, 40 + r * 121, 106, 106, 7, 7);
         String s = String.valueOf(value);
         g.setColor(value < 128 ? colorTable[0] : colorTable[1]);
         FontMetrics fm = g.getFontMetrics();
         int asc = fm.getAscent();
         int dec = fm.getDescent();
-        int x = 215 + c * 121 + (106 - fm.stringWidth(s)) / 2;
-        int y = 115 + r * 121 + (asc + (106 - (asc + dec)) / 2);
+        int x = 415 + c * 121 + (106 - fm.stringWidth(s)) / 2;
+        int y = 40 + r * 121 + (asc + (106 - (asc + dec)) / 2);
         g.drawString(s, x, y);
     }
     private void addRandomTile() {
@@ -127,6 +142,17 @@ public class Main extends JPanel {
             col = pos % side;
         } while (tiles[row][col] != null);
         int val = rand.nextInt(10) == 0 ? 4 : 2;
+        tiles[row][col] = new Tile(val);
+    }
+    private void add2048Tile() {
+        int pos = rand.nextInt(side * side);
+        int row, col;
+        do {
+            pos = (pos + 1) % (side * side);
+            row = pos / side;
+            col = pos % side;
+        } while (tiles[row][col] != null);
+        int val = 1024;
         tiles[row][col] = new Tile(val);
     }
     private boolean move(int countDownFrom, int yIncr, int xIncr) {
@@ -167,14 +193,27 @@ public class Main extends JPanel {
             }
         }
         if (moved) {
-            if (highest < target) {
-                clearMerged();
-                addRandomTile();
-                if (!movesAvailable()) {
+//            if (highest < target) {
+//                clearMerged();
+//                addRandomTile();
+//                if (!movesAvailable()) {
+//                    gamestate = State.over;
+//                }
+//            } else if (highest == target)
+//                gamestate = State.won;
+            clearMerged();
+            addRandomTile();
+            if (!movesAvailable()) {
                     gamestate = State.over;
-                }
-            } else if (highest == target)
-                gamestate = State.won;
+              }
+        }
+        if(score > GameScore.getScore().getScore()){
+            try {
+                GameScore.setScoreXML(new BestScore(score));
+            } catch (ParserConfigurationException | SAXException
+                    | IOException | TransformerException e1) {
+                e1.printStackTrace();
+            }
         }
         return moved;
     }
@@ -208,7 +247,11 @@ public class Main extends JPanel {
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             f.setTitle("2048");
             f.setResizable(true);
-            f.add(new Main(), BorderLayout.CENTER);
+            try {
+                f.add(new Main(), BorderLayout.CENTER);
+            } catch (ParserConfigurationException | SAXException | IOException e) {
+                e.printStackTrace();
+            }
             f.pack();
             f.setLocationRelativeTo(null);
             f.setVisible(true);
