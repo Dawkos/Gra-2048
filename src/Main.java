@@ -16,16 +16,16 @@ public class Main extends JPanel {
             new Color(0xffdac3), new Color(0xe7b08e), new Color(0xe7bf8e),
             new Color(0xffc4c3), new Color(0xE7948e), new Color(0xbe7e56),
             new Color(0xbe5e56), new Color(0x9c3931), new Color(0x701710)};
-    final static int target = 2048;
+    //final static int target = 2048;
     static int highest;
     static int score;
-    private Color gridColor = new Color(0xBBADA0);
-    private Color emptyColor = new Color(0xCDC1B4);
-    private Color startColor = new Color(0xFFEBCD);
-    private Random rand = new Random();
+    private final Color gridColor = new Color(0xBBADA0);
+    private final Color emptyColor = new Color(0xCDC1B4);
+    private final Color startColor = new Color(0xFFEBCD);
+    private final Random rand = new Random();
     private Tile[][] tiles;
-    private int side = 4;
-    private State gamestate = State.start;
+    private final int side = 4;
+    private State GameState = State.start;
     private boolean checkingAvailableMoves;
 
     public Main() throws ParserConfigurationException, IOException, SAXException {
@@ -47,18 +47,10 @@ public class Main extends JPanel {
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_UP:
-                        moveUp();
-                        break;
-                    case KeyEvent.VK_DOWN:
-                        moveDown();
-                        break;
-                    case KeyEvent.VK_LEFT:
-                        moveLeft();
-                        break;
-                    case KeyEvent.VK_RIGHT:
-                        moveRight();
-                        break;
+                    case KeyEvent.VK_UP -> moveUp();
+                    case KeyEvent.VK_DOWN -> moveDown();
+                    case KeyEvent.VK_LEFT -> moveLeft();
+                    case KeyEvent.VK_RIGHT -> moveRight();
                 }
                 repaint();
             }
@@ -77,10 +69,10 @@ public class Main extends JPanel {
         }
     }
     void startGame() {
-        if (gamestate != State.running) {
+        if (GameState != State.running) {
             score = 0;
             highest = 0;
-            gamestate = State.running;
+            GameState = State.running;
             tiles = new Tile[side][side];
             addRandomTile();
             addRandomTile();
@@ -90,7 +82,7 @@ public class Main extends JPanel {
     void drawGrid(Graphics2D g) throws ParserConfigurationException, IOException, SAXException {
         g.setColor(gridColor);
         g.fillRoundRect(401, 25, 619, 619, 15, 15);
-        if (gamestate == State.running) {
+        if (GameState == State.running) {
             for (int r = 0; r < side; r++) {
                 for (int c = 0; c < side; c++) {
                     if (tiles[r][c] == null) {
@@ -108,17 +100,18 @@ public class Main extends JPanel {
             g.setFont(new Font("SansSerif", Font.BOLD, 128));
             g.drawString("2048", 570, 270);
             g.setFont(new Font("SansSerif", Font.BOLD, 20));
-            if (gamestate == State.won) {
+            if (GameState == State.won) {
                 g.drawString("Wygrałeś!", 590, 350);
-            } else if (gamestate == State.over)
+            } else if (GameState == State.over)
                 g.drawString("Przegrałeś", 590, 350);
             g.setColor(gridColor);
             g.drawString("Kliknij aby zagrać", 570, 470);
             g.drawString("(używaj strzałek do sterowania)", 570, 530);
         }
+        g.setColor(new Color(0xBBADA0));
         g.setFont(new Font("SansSerif", Font.BOLD, 25));
         g.drawString("Wynik: " + score, 175, 165);
-        g.drawString("Najwyższy wynik: " + String.valueOf(GameScore.getScoreXML().getScore()), 105, 480);
+        g.drawString("Najwyższy wynik: " + GameScore.getScoreXML().getScore(), 105, 480);
     }
     void drawTile(Graphics2D g, int r, int c) {
         int value = tiles[r][c].getValue();
@@ -197,14 +190,14 @@ public class Main extends JPanel {
 //                clearMerged();
 //                addRandomTile();
 //                if (!movesAvailable()) {
-//                    gamestate = State.over;
+//                    GameState = State.over;
 //                }
 //            } else if (highest == target)
-//                gamestate = State.won;
+//                GameState = State.won;
             clearMerged();
             addRandomTile();
             if (!movesAvailable()) {
-                    gamestate = State.over;
+                GameState = State.over;
               }
         }
         if(score > GameScore.getScore().getScore()){
