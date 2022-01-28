@@ -10,12 +10,12 @@ class Tile {
         return value;
     }
 
-    void setMerged(boolean m) {
-        merged = m;
+    void setMerged() {
+        merged = false;
     }
 
     boolean canMergeWith(Tile other) {
-        return !merged && other != null && !other.merged && value == other.getValue();
+        return !merged && other != null && !other.merged && value == other.getValue() && value<8192;
     }
 
     int mergeWith(Tile other) {
