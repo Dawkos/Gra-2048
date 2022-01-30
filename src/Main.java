@@ -10,10 +10,12 @@ import java.util.Scanner;
 import javax.swing.*;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-
 import org.xml.sax.SAXException;
 
 public class Main extends JPanel {
+    private JRadioButton fourSide;
+    private JRadioButton fiveSide;
+
     enum State {
         start, running, over
     }
@@ -21,8 +23,8 @@ public class Main extends JPanel {
             new Color(0x701710), new Color(0xFFE4C3), new Color(0xfff4d3),
             new Color(0xffdac3), new Color(0xe7b08e), new Color(0xe7bf8e),
             new Color(0xffc4c3), new Color(0xE7948e), new Color(0xbe7e56),
-            new Color(0xbe5e56), new Color(0x9c3931), new Color(0x701710),
-            new Color(0xC1B222), new Color(0xDC5D14), new Color(0xDC1414)};
+            new Color(0xbe5e56), new Color(0x9c3931), new Color(0xDC5D14),
+            new Color(0xCE4025), new Color(0x701710), new Color(0xDC1414)};
     final Color[] valueColor = {
             new Color(0x776E65), new Color(0xF9F6F2)
     };
@@ -44,6 +46,7 @@ public class Main extends JPanel {
         setFont(new Font("SansSerif", Font.BOLD, 48));
         setFocusable(true);
         GameScore.setScore(GameScore.getScoreXML());
+
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -155,10 +158,10 @@ public class Main extends JPanel {
         for (int row=0; row<side; row++) {
             for (int col=0; col<side; col++) {
                 if (tiles[row][col] == null) {
-                    fw.write(String.valueOf(0)+" ");
+                    fw.write(0 +" ");
                 } else {
                     value = tiles[row][col].getValue();
-                    fw.write(String.valueOf(value)+" ");
+                    fw.write(value +" ");
                 }
             }
             fw.write(System.getProperty("line.separator"));
@@ -209,6 +212,11 @@ public class Main extends JPanel {
             g.setColor(gridColor.darker());
             g.setFont(new Font("SansSerif", Font.BOLD, 100));
             drawStringCenter(g, "2048", 370, 27, 160);
+            fourSide = new JRadioButton();
+            fourSide.setText("4x4");
+            fiveSide = new JRadioButton();
+            fiveSide.setText("5x5");
+            //fourSide.setBounds(120, 50, 120, 50);
 
             g.setFont(new Font("SansSerif", Font.BOLD, 20));
             g.setColor(new Color(0x776E65));
@@ -235,7 +243,6 @@ public class Main extends JPanel {
         int x = 20 + col * 98 + (90 - fm.stringWidth(s)) / 2;
         int y = 120 + row * 98 + (asc + (90 - (asc + dec)) / 2);
         g.drawString(s, x, y);
-
     }
     private void addRandomTile() {
         int pos = rand.nextInt(side * side);
@@ -245,7 +252,7 @@ public class Main extends JPanel {
             row = pos / side;
             col = pos % side;
         } while (tiles[row][col] != null);
-        int val = rand.nextInt(10) == 0 ? 512 : 256;
+        int val = rand.nextInt(10) == 0 ? 64 : 32;
         tiles[row][col] = new Tile(val);
     }
 
@@ -276,7 +283,6 @@ public class Main extends JPanel {
                     if (checkingAvailableMoves)
                         return true;
                     int value = next.mergeWith(current);
-
                     score += value;
                     tiles[row][col] = null;
                     moved = true;
@@ -291,7 +297,7 @@ public class Main extends JPanel {
             addRandomTile();
             if (!movesAvailable()) {
                 GameState = State.over;
-                JOptionPane.showMessageDialog(null, "Game Over", "2048", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Przegrałeś", "2048", JOptionPane.INFORMATION_MESSAGE);
             }
         }
         if(score > GameScore.getScore().getScore()){
@@ -334,11 +340,13 @@ public class Main extends JPanel {
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             f.setTitle("2048");
             f.setResizable(true);
+
             try {
                 f.add(new Main(), BorderLayout.CENTER);
             } catch (ParserConfigurationException | SAXException | IOException e) {
                 e.printStackTrace();
             }
+            f.setBounds(100, 100, 400, 200);
             f.pack();
             f.setLocationRelativeTo(null);
             f.setVisible(true);
