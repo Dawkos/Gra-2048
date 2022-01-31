@@ -13,8 +13,6 @@ import javax.xml.transform.TransformerException;
 import org.xml.sax.SAXException;
 
 public class Main extends JPanel {
-    private JRadioButton fourSide;
-    private JRadioButton fiveSide;
 
     enum State {
         start, running, over
@@ -34,10 +32,12 @@ public class Main extends JPanel {
     private final Color startColor = new Color(0xFFEBCD);
     private final Random rand = new Random();
     private Tile[][] tiles;
-    private final int side = 4;
+    public int side;
     private State GameState = State.start;
     String path = System.getProperty("user.dir")+"\\load.txt";
     private boolean checkingAvailableMoves;
+    public int zmienna1;
+    public int zmienna2;
 
     public Main() throws ParserConfigurationException, IOException, SAXException {
 
@@ -50,8 +50,16 @@ public class Main extends JPanel {
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if (e.getKeyCode() == KeyEvent.VK_1) {
                     startGame();
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_2){
+                    startGame2();
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_3){
+                    startGame3();
                 }
 
                 if (e.getKeyCode() == KeyEvent.VK_R) {
@@ -75,15 +83,13 @@ public class Main extends JPanel {
                         JOptionPane.showMessageDialog(null, "Problem z zapisaniem gry", "2048", JOptionPane.ERROR_MESSAGE);
                     }
                 }
+
+                if (e.getKeyCode() == KeyEvent.VK_M){
+                    GameState = State.start;
+                }
             }
         });
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                startGame();
-                repaint();
-            }
-        });
+
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -111,11 +117,41 @@ public class Main extends JPanel {
     }
     void startGame() {
         if (GameState != State.running) {
+            side = 4;
+            zmienna1 = 98;
+            zmienna2 = 90;
             score = 0;
             GameState = State.running;
             tiles = new Tile[side][side];
             addRandomTile();
             addRandomTile();
+        }
+    }
+
+    void startGame2() {
+        if (GameState != State.running) {
+            side = 5;
+            zmienna1 = 78;
+            zmienna2 = 70;
+            score = 0;
+            GameState = State.running;
+            tiles = new Tile[side][side];
+            addRandomTile();
+            addRandomTile();
+        }
+    }
+
+    void startGame3() {
+        if (GameState != State.running) {
+            side = 4;
+            zmienna1 = 98;
+            zmienna2 = 90;
+            score = 2048;
+            GameState = State.running;
+            tiles = new Tile[side][side];
+            addRandomTile();
+            addRandomTile();
+            add2048Tile();
         }
     }
     void restartGame() {
@@ -148,7 +184,7 @@ public class Main extends JPanel {
         }
         sc.close();
         //wczytujemy wynik
-        String load_score = Files.readAllLines(Paths.get(path)).get(4);
+        String load_score = Files.readAllLines(Paths.get(path)).get(side);
         score = Integer.parseInt(load_score);
     }
     void saveGame() throws IOException {
@@ -193,14 +229,15 @@ public class Main extends JPanel {
             String best = String.valueOf(GameScore.getScoreXML().getScore());
             drawStringCenter(g, s, 100, 18, 68);
             drawStringCenter(g, best, 100, 130, 68);
-            g.drawString("R - zrestartuj gre", 250, 44);
-            g.drawString("S - zapisz gre", 250, 64);
-            g.drawString("L - wczytaj gre", 250, 84);
+            g.drawString("R - zrestartuj gre", 250, 34);
+            g.drawString("S - zapisz gre", 250, 54);
+            g.drawString("L - wczytaj gre", 250, 74);
+            g.drawString("M - menu", 250, 94);
             for (int row = 0; row<side; row++) {
                 for (int col = 0; col<side; col++) {
                     if (tiles[row][col] == null) {
                         g.setColor(emptyColor);
-                        g.fillRoundRect(20 + col * 98, 120 + row * 98, 90, 90, 10, 10);  //third layer
+                        g.fillRoundRect(20 + col * zmienna1, 120 + row * zmienna1, zmienna2, zmienna2, 10, 10);  //third layer
                     } else {
                         drawTile(g, row, col);
                     }
@@ -212,18 +249,14 @@ public class Main extends JPanel {
             g.setColor(gridColor.darker());
             g.setFont(new Font("SansSerif", Font.BOLD, 100));
             drawStringCenter(g, "2048", 370, 27, 160);
-            fourSide = new JRadioButton();
-            fourSide.setText("4x4");
-            fiveSide = new JRadioButton();
-            fiveSide.setText("5x5");
-            //fourSide.setBounds(120, 50, 120, 50);
-
             g.setFont(new Font("SansSerif", Font.BOLD, 20));
             g.setColor(new Color(0x776E65));
-            drawStringCenter(g, "Wybierz rozmiar planszy i wcisnij enter", 370, 27, 340);
+            drawStringCenter(g, "Plansza 4x4: wybierz 1", 370, 27, 280);
+            drawStringCenter(g, "Plansza 5x5: wybierz 2", 370, 27, 310);
+            drawStringCenter(g, "Zaczynasz od 2048: wybierz 3", 370, 27, 340);
             drawStringCenter(g, "Wcisnij L, aby wczytać ostatnią gre", 370, 27, 370);
             g.setFont(new Font("SansSerif", Font.BOLD, 16));
-            drawStringCenter(g, "Podczas gry używaj klawiszy strzałek", 370, 27, 460);
+
         }
     }
     private void drawStringCenter(Graphics2D g, String str, int width_rect, int xPos_rect, int yPos_string){
@@ -234,14 +267,14 @@ public class Main extends JPanel {
     void drawTile(Graphics2D g, int row, int col) {
         int value = tiles[row][col].getValue();
         g.setColor(colorTable[(int) (Math.log(value) / Math.log(2)) + 1]);  //return log 2 of "value"
-        g.fillRoundRect(20 + col * 98, 120 + row * 98, 90, 90, 10, 10);      //tile background
+        g.fillRoundRect(20 + col * zmienna1, 120 + row * zmienna1, zmienna2, zmienna2, 10, 10);      //tile background
         String s = String.valueOf(value);
         g.setColor(value < 128 ? colorTable[0] : colorTable[1]);
         FontMetrics fm = g.getFontMetrics();
         int asc = fm.getAscent();
         int dec = fm.getDescent();
-        int x = 20 + col * 98 + (90 - fm.stringWidth(s)) / 2;
-        int y = 120 + row * 98 + (asc + (90 - (asc + dec)) / 2);
+        int x = 20 + col * zmienna1 + (zmienna2 - fm.stringWidth(s)) / 2;
+        int y = 120 + row * zmienna1 + (asc + (zmienna2 - (asc + dec)) / 2);
         g.drawString(s, x, y);
     }
     private void addRandomTile() {
@@ -252,7 +285,18 @@ public class Main extends JPanel {
             row = pos / side;
             col = pos % side;
         } while (tiles[row][col] != null);
-        int val = rand.nextInt(10) == 0 ? 64 : 32;
+        int val = rand.nextInt(10) == 0 ? 4 : 2;
+        tiles[row][col] = new Tile(val);
+    }
+    private void add2048Tile() {
+        int pos = rand.nextInt(side * side);
+        int row, col;
+        do {
+            pos = (pos + 1) % (side * side);
+            row = pos / side;
+            col = pos % side;
+        } while (tiles[row][col] != null);
+        int val = 2048;
         tiles[row][col] = new Tile(val);
     }
 
@@ -346,7 +390,6 @@ public class Main extends JPanel {
             } catch (ParserConfigurationException | SAXException | IOException e) {
                 e.printStackTrace();
             }
-            f.setBounds(100, 100, 400, 200);
             f.pack();
             f.setLocationRelativeTo(null);
             f.setVisible(true);
